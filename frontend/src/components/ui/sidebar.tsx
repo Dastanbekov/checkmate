@@ -10,6 +10,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   const links = [
+    { name: "Play vs Bot", href: "/play/bot", icon: Play },
     { name: "Analyzer", href: "/analyzer", icon: Activity },
     { name: "Games", href: "/games", icon: Play },
     { name: "Communities", href: "/community", icon: Users },
