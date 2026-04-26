@@ -6,7 +6,9 @@ import { Chessboard } from "react-chessboard";
 import { BrainCircuit, Flag, RotateCcw } from "lucide-react";
 
 export default function PlayBotPage() {
+  const [mounted, setMounted] = useState(false);
   const [game, setGame] = useState(new Chess());
+  const gameRef = useRef(new Chess());
   const wsRef = useRef<WebSocket | null>(null);
   const [status, setStatus] = useState("Connecting to server...");
   const [depth, setDepth] = useState(10);
@@ -14,6 +16,7 @@ export default function PlayBotPage() {
   const [winChance, setWinChance] = useState<number>(50);
 
   useEffect(() => {
+    setMounted(true);
     const socket = new WebSocket("ws://127.0.0.1:8000/ws/play/bot/");
     wsRef.current = socket;
     
@@ -28,6 +31,7 @@ export default function PlayBotPage() {
         const newGame = new Chess();
         newGame.load(data.fen);
         setGame(newGame);
+        gameRef.current = newGame;
         
         if (data.eval !== undefined) {
            setEvaluation(data.eval);
@@ -52,10 +56,23 @@ export default function PlayBotPage() {
   }, []);
 
   function onDrop(sourceSquare: string, targetSquare: string) {
-    const socket = wsRef.current;
-    if (!socket || socket.readyState !== WebSocket.OPEN) return false;
+    console.log("onDrop triggered:", sourceSquare, "->", targetSquare);
     
-    const gameCopy = new Chess(game.fen());
+    const socket = wsRef.current;
+    if (!socket) {
+      console.error("WebSocket is null");
+      return false;
+    }
+    
+    console.log("WebSocket readyState:", socket.readyState, " (OPEN = 1)");
+    
+    if (socket.readyState !== WebSocket.OPEN) {
+      console.error("WebSocket not ready. It is in state:", socket.readyState);
+      return false;
+    }
+    
+    const gameCopy = new Chess(gameRef.current.fen());
+    console.log("Current FEN:", gameCopy.fen());
     
     try {
       const move = gameCopy.move({
@@ -64,26 +81,40 @@ export default function PlayBotPage() {
         promotion: "q", 
       });
 
-      if (move === null) return false;
+      console.log("Move validation result:", move);
+
+      if (move === null) {
+         console.warn("Invalid move according to chess.js");
+         return false;
+      }
 
       // Update local state immediately
       setGame(gameCopy);
+      gameRef.current = gameCopy;
       setStatus("Sending move...");
 
-      // Send to backend
-      socket.send(JSON.stringify({ 
+      const movePayload = { 
         move: move.lan, 
         depth: depth
-      }));
+      };
+      console.log("Sending payload:", movePayload);
+      
+      // Send to backend
+      socket.send(JSON.stringify(movePayload));
       
       return true;
     } catch (e) {
+      console.error("Exception during move:", e);
       return false;
     }
   }
 
   const visualEval = Math.max(-10, Math.min(10, evaluation));
   const whiteHeight = 50 + (visualEval * 5);
+
+  if (!mounted) {
+     return <div className="h-full flex items-center justify-center">Loading board...</div>;
+  }
 
   return (
     <div className="h-full flex flex-col lg:flex-row gap-8">
@@ -105,6 +136,7 @@ export default function PlayBotPage() {
            <Chessboard 
               position={game.fen()} 
               onPieceDrop={onDrop}
+              boardWidth={600}
               customDarkSquareStyle={{ backgroundColor: "#3f3f46" }}
               customLightSquareStyle={{ backgroundColor: "#d4d4d8" }}
               animationDuration={200}

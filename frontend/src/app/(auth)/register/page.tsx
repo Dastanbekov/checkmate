@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,13 +32,50 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
+  const [apiError, setApiError] = useState("");
+
   const onSubmit = async (data: RegisterFormValues) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock login success
-    login("mock-jwt-token-456", { id: "2", name: data.name, email: data.email });
-    router.push("/analyzer");
+    setApiError("");
+    try {
+      // 1. Register User
+      const registerRes = await fetch("http://127.0.0.1:8000/api/users/register/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+           username: data.name, // using name as username
+           email: data.email, 
+           password: data.password 
+        }),
+      });
+      
+      if (!registerRes.ok) {
+        const errorData = await registerRes.json();
+        throw new Error(errorData.username ? "Username already exists" : "Registration failed");
+      }
+      
+      // 2. Auto-login after registration
+      const loginRes = await fetch("http://127.0.0.1:8000/api/users/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: data.name, password: data.password }),
+      });
+      
+      if (!loginRes.ok) throw new Error("Failed to auto-login");
+      const tokenData = await loginRes.json();
+      
+      // 3. Get Profile
+      const profileRes = await fetch("http://127.0.0.1:8000/api/users/profile/", {
+        headers: { Authorization: `Bearer ${tokenData.access}` },
+      });
+      
+      if (!profileRes.ok) throw new Error("Failed to fetch profile");
+      const profileData = await profileRes.json();
+      
+      login(tokenData.access, { id: profileData.id.toString(), name: profileData.username, email: profileData.email });
+      router.push("/analyzer");
+    } catch (err: any) {
+      setApiError(err.message);
+    }
   };
 
   return (
@@ -104,6 +142,12 @@ export default function RegisterPage() {
                 <p className="text-red-400 text-xs mt-1.5">{errors.confirmPassword.message}</p>
               )}
             </div>
+
+            {apiError && (
+              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-500 text-sm text-center">
+                {apiError}
+              </div>
+            )}
 
             <button
               type="submit"

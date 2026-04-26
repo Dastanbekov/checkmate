@@ -128,3 +128,31 @@
     @apply font-sans;
   }
 }
+
+@layer utilities {
+  .prose h1 { @apply text-2xl font-bold mb-4 mt-6 text-white; }
+  .prose h2 { @apply text-xl font-bold mb-3 mt-5 text-white border-b border-zinc-800 pb-2; }
+  .prose h3 { @apply text-lg font-bold mb-2 mt-4 text-white; }
+  .prose p { @apply mb-4 text-zinc-300 leading-relaxed; }
+  .prose ul { @apply list-disc list-inside mb-4 text-zinc-300; }
+  .prose ol { @apply list-decimal list-inside mb-4 text-zinc-300; }
+  .prose li { @apply mb-1; }
+  .prose strong { @apply text-white font-bold; }
+  .prose code { @apply bg-zinc-800 px-1.5 py-0.5 rounded text-sm text-zinc-200 font-mono; }
+  .prose pre { @apply bg-zinc-800 p-4 rounded-lg overflow-x-auto mb-4 text-sm text-zinc-200 font-mono; }
+  .prose pre code { @apply bg-transparent p-0; }
+  .prose blockquote { @apply border-l-4 border-zinc-500 pl-4 italic text-zinc-400 mb-4; }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-zinc-700 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-500;
+  }
+}

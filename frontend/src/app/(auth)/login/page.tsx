@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,13 +27,41 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  const [apiError, setApiError] = useState("");
+
   const onSubmit = async (data: LoginFormValues) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock login success
-    login("mock-jwt-token-123", { id: "1", name: "Grandmaster", email: data.email });
-    router.push("/analyzer");
+    setApiError("");
+    try {
+      // 1. Get Token
+      const res = await fetch("http://127.0.0.1:8000/api/users/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: data.email, password: data.password }), // assuming email is used as username or the backend uses it
+      });
+      
+      if (!res.ok) {
+        throw new Error("Invalid credentials");
+      }
+      
+      const tokenData = await res.json();
+      
+      // 2. Get Profile
+      const profileRes = await fetch("http://127.0.0.1:8000/api/users/profile/", {
+        headers: { Authorization: `Bearer ${tokenData.access}` },
+      });
+      
+      if (!profileRes.ok) {
+        throw new Error("Failed to fetch profile");
+      }
+      
+      const profileData = await profileRes.json();
+      
+      // 3. Save to context
+      login(tokenData.access, { id: profileData.id.toString(), name: profileData.username, email: profileData.email });
+      router.push("/analyzer");
+    } catch (err: any) {
+      setApiError(err.message);
+    }
   };
 
   return (
@@ -73,6 +102,12 @@ export default function LoginPage() {
                 <p className="text-red-400 text-xs mt-1.5">{errors.password.message}</p>
               )}
             </div>
+
+            {apiError && (
+              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-500 text-sm text-center">
+                {apiError}
+              </div>
+            )}
 
             <button
               type="submit"
