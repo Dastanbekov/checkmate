@@ -11,6 +11,7 @@ export function Sidebar() {
 
   const links = [
     { name: "Play vs Bot", href: "/play/bot", icon: Play },
+    { name: "Play Online", href: "/play/online", icon: Users },
     { name: "Analyzer", href: "/analyzer", icon: Activity },
     { name: "Games", href: "/games", icon: Play },
     { name: "Communities", href: "/community", icon: Users },
