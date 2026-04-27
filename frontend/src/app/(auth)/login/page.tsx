@@ -33,7 +33,7 @@ export default function LoginPage() {
     setApiError("");
     try {
       // 1. Get Token
-      const res = await fetch("http://127.0.0.1:8000/api/users/login/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/users/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: data.email, password: data.password }), // assuming email is used as username or the backend uses it
@@ -46,7 +46,7 @@ export default function LoginPage() {
       const tokenData = await res.json();
 
       // 2. Get Profile
-      const profileRes = await fetch("http://127.0.0.1:8000/api/users/profile/", {
+      const profileRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/users/profile/`, {
         headers: { Authorization: `Bearer ${tokenData.access}` },
       });
 

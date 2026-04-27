@@ -31,17 +31,17 @@ export function Footer() {
           
           <div className="flex flex-col gap-3">
             <h3 className="text-white font-semibold mb-2">Company</h3>
-            <Link href="#" className="text-sm hover:text-white transition-colors">About Us</Link>
-            <Link href="#" className="text-sm hover:text-white transition-colors">Careers</Link>
-            <Link href="#" className="text-sm hover:text-white transition-colors">Blog</Link>
-            <Link href="#" className="text-sm hover:text-white transition-colors">Contact</Link>
+            <Link href="/about" className="text-sm hover:text-white transition-colors">About Us</Link>
+            <Link href="/careers" className="text-sm hover:text-white transition-colors">Careers</Link>
+            <Link href="/blog" className="text-sm hover:text-white transition-colors">Blog</Link>
+            <Link href="/contact" className="text-sm hover:text-white transition-colors">Contact</Link>
           </div>
 
           <div className="flex flex-col gap-3">
             <h3 className="text-white font-semibold mb-2">Legal</h3>
-            <Link href="#" className="text-sm hover:text-white transition-colors">Terms of Service</Link>
-            <Link href="#" className="text-sm hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="#" className="text-sm hover:text-white transition-colors">Cookie Policy</Link>
+            <Link href="/terms" className="text-sm hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="text-sm hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/cookies" className="text-sm hover:text-white transition-colors">Cookie Policy</Link>
           </div>
         </div>
       </div>
