@@ -43,7 +43,7 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: data.name, // using name as username
+          username: data.email, // Use email as username for consistency
           email: data.email,
           password: data.password
         }),
@@ -51,14 +51,14 @@ export default function RegisterPage() {
 
       if (!registerRes.ok) {
         const errorData = await registerRes.json();
-        throw new Error(errorData.username ? "Username already exists" : "Registration failed");
+        throw new Error(errorData.username ? "Account with this email already exists" : "Registration failed");
       }
 
       // 2. Auto-login after registration
       const loginRes = await fetch(`${API_URL}/api/users/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: data.name, password: data.password }),
+        body: JSON.stringify({ username: data.email, password: data.password }),
       });
 
       if (!loginRes.ok) throw new Error("Failed to auto-login");
