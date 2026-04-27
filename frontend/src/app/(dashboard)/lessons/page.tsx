@@ -90,8 +90,8 @@ export default function LessonsPage() {
     moves.map((move: any) => {
       newSquares[move.to] = {
         background:
-          g.get(move.to as any) &&
-          g.get(move.to as any).color !== g.get(square as any).color
+          gameRef.current!.get(move.to as any) &&
+          gameRef.current!.get(move.to as any)!.color !== gameRef.current!.get(square as any)!.color
             ? "radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)"
             : "radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)",
         borderRadius: "50%",

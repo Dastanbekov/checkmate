@@ -156,8 +156,8 @@ export default function OnlinePlayPage() {
     moves.map((move: any) => {
       newSquares[move.to] = {
         background:
-          gameRef.current.get(move.to as any) &&
-          gameRef.current.get(move.to as any).color !== gameRef.current.get(square as any).color
+          gameRef.current!.get(move.to as any) &&
+          gameRef.current!.get(move.to as any)!.color !== gameRef.current!.get(square as any)!.color
             ? "radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)"
             : "radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)",
         borderRadius: "50%",
