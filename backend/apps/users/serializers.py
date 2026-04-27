@@ -2,9 +2,12 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 class UserSerializer(serializers.ModelSerializer):
+    elo_rating = serializers.IntegerField(source='profile.elo_rating', read_only=True)
+    matches_played = serializers.IntegerField(source='profile.matches_played', read_only=True)
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'date_joined')
+        fields = ('id', 'username', 'email', 'date_joined', 'elo_rating', 'matches_played')
         read_only_fields = ('id', 'date_joined')
 
 class RegisterSerializer(serializers.ModelSerializer):

@@ -16,11 +16,8 @@ export function Navbar() {
   return (
     <nav className="absolute top-0 left-0 w-full z-50 px-6 py-6 flex items-center justify-between">
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2 text-white font-black text-2xl tracking-tighter mix-blend-difference z-10 cursor-pointer">
-        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-black text-2xl">
-          ♞
-        </div>
-        CHESS<span className="text-gray-400">MASTERY</span>
+      <Link href="/" className="flex items-center gap-2 mix-blend-difference z-10 cursor-pointer hover:opacity-80 transition-opacity ml-4">
+        <img src="/logo.png" alt="ChessMastery Logo" className="h-14 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
       </Link>
 
       {/* Center Nav Header */}

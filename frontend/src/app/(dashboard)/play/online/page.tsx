@@ -69,6 +69,15 @@ export default function OnlinePlayPage() {
     ws.onopen = () => {
       setGameState("playing");
       setStatus(color === 'w' ? "Your turn (White)" : "Waiting for opponent (Black)");
+      
+      const token = localStorage.getItem("token");
+      if (token) {
+        ws.send(JSON.stringify({
+          type: "authenticate",
+          token: token,
+          color: color
+        }));
+      }
     };
 
     ws.onmessage = (event) => {

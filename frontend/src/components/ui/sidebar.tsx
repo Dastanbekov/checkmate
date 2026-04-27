@@ -22,11 +22,8 @@ export function Sidebar() {
     <aside className="w-64 h-screen bg-zinc-950 border-r border-zinc-900 flex flex-col fixed left-0 top-0 text-zinc-300">
       {/* Logo */}
       <div className="p-6">
-        <Link href="/" className="flex items-center gap-2 text-white font-black text-xl tracking-tighter hover:opacity-80 transition-opacity">
-          <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center text-black text-xl">
-            ♞
-          </div>
-          CHESS<span className="text-zinc-500">MASTERY</span>
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity ml-4">
+          <img src="/logo.png" alt="ChessMastery Logo" className="h-12 w-auto object-contain mx-auto drop-shadow-lg" />
         </Link>
       </div>
 
@@ -60,7 +57,9 @@ export function Sidebar() {
             </div>
             <div className="flex flex-col truncate">
               <span className="text-sm font-medium text-white leading-none truncate">{user?.name}</span>
-              <span className="text-xs text-zinc-500 mt-1">Grandmaster</span>
+              <span className="text-xs text-zinc-400 mt-1 font-bold">
+                {user?.elo_rating ? `${user.elo_rating} ELO` : "Unrated"}
+              </span>
             </div>
           </div>
         </div>

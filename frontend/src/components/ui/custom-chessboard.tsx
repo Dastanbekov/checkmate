@@ -10,10 +10,7 @@ interface CustomChessboardProps {
   boardOrientation?: "white" | "black";
 }
 
-const PIECE_SYMBOLS: Record<string, string> = {
-  p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚",
-  P: "♙", N: "♘", B: "♗", R: "♖", Q: "♕", K: "♔",
-};
+// PIECE_SYMBOLS removed as we are using SVG images now
 
 export function CustomChessboard({
   fen,
@@ -87,13 +84,13 @@ export function CustomChessboard({
 
               {/* Piece */}
               {piece && (
-                <div
-                  className={`
-                    relative z-30 flex flex-col items-center justify-center text-6xl drop-shadow-md
-                    ${piece.color === "w" ? "text-white" : "text-black"}
-                  `}
-                >
-                  {PIECE_SYMBOLS[piece.color === "w" ? piece.type.toUpperCase() : piece.type]}
+                <div className="relative z-30 flex flex-col items-center justify-center w-full h-full drop-shadow-md pointer-events-none">
+                  <img 
+                    src={`/pieces/${piece.color}${piece.type.toUpperCase()}.svg`}
+                    alt={`${piece.color} ${piece.type}`}
+                    className="w-[85%] h-[85%] object-contain"
+                    draggable={false}
+                  />
                 </div>
               )}
 

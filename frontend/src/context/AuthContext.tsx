@@ -6,6 +6,8 @@ interface User {
   id: string;
   name: string;
   email: string;
+  elo_rating?: number;
+  matches_played?: number;
 }
 
 interface AuthContextType {
@@ -31,7 +33,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error("Invalid token");
         })
         .then(data => {
-          const userData = { id: data.id.toString(), name: data.username, email: data.email };
+          const userData = { 
+            id: data.id.toString(), 
+            name: data.username, 
+            email: data.email,
+            elo_rating: data.elo_rating,
+            matches_played: data.matches_played
+          };
           setUser(userData);
           localStorage.setItem("user", JSON.stringify(userData));
         })
