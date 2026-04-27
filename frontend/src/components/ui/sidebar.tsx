@@ -38,11 +38,10 @@ export function Sidebar() {
             <Link
               key={link.name}
               href={link.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive 
-                  ? "bg-zinc-800 text-white" 
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
+                  ? "bg-zinc-800 text-white"
                   : "hover:bg-zinc-900 hover:text-white"
-              }`}
+                }`}
             >
               <Icon className="w-5 h-5" />
               {link.name}
@@ -64,7 +63,7 @@ export function Sidebar() {
             </div>
           </div>
         </div>
-        <button 
+        <button
           onClick={logout}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-zinc-900 hover:text-red-300 transition-colors"
         >

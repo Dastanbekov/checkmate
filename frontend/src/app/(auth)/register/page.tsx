@@ -41,36 +41,36 @@ export default function RegisterPage() {
       const registerRes = await fetch("http://127.0.0.1:8000/api/users/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-           username: data.name, // using name as username
-           email: data.email, 
-           password: data.password 
+        body: JSON.stringify({
+          username: data.name, // using name as username
+          email: data.email,
+          password: data.password
         }),
       });
-      
+
       if (!registerRes.ok) {
         const errorData = await registerRes.json();
         throw new Error(errorData.username ? "Username already exists" : "Registration failed");
       }
-      
+
       // 2. Auto-login after registration
       const loginRes = await fetch("http://127.0.0.1:8000/api/users/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: data.name, password: data.password }),
       });
-      
+
       if (!loginRes.ok) throw new Error("Failed to auto-login");
       const tokenData = await loginRes.json();
-      
+
       // 3. Get Profile
       const profileRes = await fetch("http://127.0.0.1:8000/api/users/profile/", {
         headers: { Authorization: `Bearer ${tokenData.access}` },
       });
-      
+
       if (!profileRes.ok) throw new Error("Failed to fetch profile");
       const profileData = await profileRes.json();
-      
+
       login(tokenData.access, { id: profileData.id.toString(), name: profileData.username, email: profileData.email });
       router.push("/analyzer");
     } catch (err: any) {
@@ -81,7 +81,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <Navbar />
-      
+
       <div className="flex-1 flex items-center justify-center p-4 pt-32">
         <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
           {/* Subtle glow */}

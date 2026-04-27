@@ -38,24 +38,24 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: data.email, password: data.password }), // assuming email is used as username or the backend uses it
       });
-      
+
       if (!res.ok) {
         throw new Error("Invalid credentials");
       }
-      
+
       const tokenData = await res.json();
-      
+
       // 2. Get Profile
       const profileRes = await fetch("http://127.0.0.1:8000/api/users/profile/", {
         headers: { Authorization: `Bearer ${tokenData.access}` },
       });
-      
+
       if (!profileRes.ok) {
         throw new Error("Failed to fetch profile");
       }
-      
+
       const profileData = await profileRes.json();
-      
+
       // 3. Save to context
       login(tokenData.access, { id: profileData.id.toString(), name: profileData.username, email: profileData.email });
       router.push("/analyzer");
@@ -67,7 +67,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <Navbar />
-      
+
       <div className="flex-1 flex items-center justify-center p-4 pt-32">
         <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
           {/* Subtle glow */}

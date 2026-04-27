@@ -26,19 +26,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       fetch("http://127.0.0.1:8000/api/users/profile/", {
         headers: { Authorization: `Bearer ${token}` }
       })
-      .then(res => {
-        if (res.ok) return res.json();
-        throw new Error("Invalid token");
-      })
-      .then(data => {
-        const userData = { id: data.id.toString(), name: data.username, email: data.email };
-        setUser(userData);
-        localStorage.setItem("user", JSON.stringify(userData));
-      })
-      .catch(() => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      });
+        .then(res => {
+          if (res.ok) return res.json();
+          throw new Error("Invalid token");
+        })
+        .then(data => {
+          const userData = { id: data.id.toString(), name: data.username, email: data.email };
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
+        })
+        .catch(() => {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        });
     }
   }, []);
 
