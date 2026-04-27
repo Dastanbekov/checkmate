@@ -1,7 +1,7 @@
 # ♟️ CheckMate — Ultimate AI-Powered Chess Platform
 
 [![Project Video Demo](preview.png)](https://youtu.be/Wp6u0E32ilc) 
-[![Project Video Demo Link](https://youtu.be/Wp6u0E32ilc)
+[Project Video Demo](https://youtu.be/Wp6u0E32ilc)
 *(Click the badge above to watch the platform in action)*
 
 ChessMastery is a state-of-the-art chess ecosystem designed for players of all levels. It combines traditional chess mechanics with cutting-edge AI analysis, real-time multiplayer, and community features.
