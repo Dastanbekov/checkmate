@@ -10,8 +10,6 @@ interface CustomChessboardProps {
   boardOrientation?: "white" | "black";
 }
 
-// PIECE_SYMBOLS removed as we are using SVG images now
-
 export function CustomChessboard({
   fen,
   onSquareClick,

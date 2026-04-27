@@ -4,6 +4,23 @@ import { useState, useEffect, useCallback } from "react";
 import { CSGOChess, Cell } from "@/game/csgo-engine";
 import { Shield, Target, Bomb, Cloud, Coins, Crosshair } from "lucide-react";
 
+const CSGO_MAP: Record<string, string> = {
+  // White (Counter-Terrorist)
+  'ct-pawn': '/pieces/csgo/ct/pawn_ct-removebg-preview.png',
+  'ct-knight': '/pieces/csgo/ct/horse_ct-removebg-preview.png',
+  'ct-bishop': '/pieces/csgo/ct/officer_ct-removebg-preview.png',
+  'ct-rook': '/pieces/csgo/ct/rock_ct-removebg-preview.png',
+  'ct-queen': '/pieces/csgo/ct/queen_ct-removebg-preview.png',
+  'ct-king': '/pieces/csgo/ct/king_ct-removebg-preview.png',
+  // Black (Terrorist)
+  't-pawn': '/pieces/csgo/t/pawn_t-removebg-preview.png',
+  't-knight': '/pieces/csgo/t/horse_t-removebg-preview.png',
+  't-bishop': '/pieces/csgo/t/officer_t-removebg-preview.png',
+  't-rook': '/pieces/csgo/t/rock_t-removebg-preview.png',
+  't-queen': '/pieces/csgo/t/queen_t-removebg-preview.png',
+  't-king': '/pieces/csgo/t/king_t-removebg-preview.png',
+};
+
 export default function CSGOChessPage() {
   const [game, setGame] = useState<CSGOChess | null>(null);
   const [selectedCell, setSelectedCell] = useState<{x: number, y: number} | null>(null);
@@ -34,6 +51,11 @@ export default function CSGOChessPage() {
       success = game.movePiece(selectedCell.x, selectedCell.y, x, y);
     } else if (actionType === "shoot") {
       success = game.shootPiece(selectedCell.x, selectedCell.y, x, y);
+      if (success) {
+        const audio = new Audio('/sounds/shoot.mp3');
+        audio.volume = 0.2;
+        audio.play().catch(e => console.error(e));
+      }
     } else if (actionType === "smoke") {
       success = game.throwSmoke(selectedCell.x, selectedCell.y, x, y);
     }
@@ -113,13 +135,12 @@ export default function CSGOChessPage() {
                   {/* Piece */}
                   {cell.piece && (
                     <div className="relative z-30 flex flex-col items-center">
-                       <div className={`text-3xl font-black ${cell.piece.team === 'ct' ? 'text-blue-400' : 'text-orange-400'}`}>
-                         {cell.piece.type === 'king' && '👑'}
-                         {cell.piece.type === 'queen' && '🎯'}
-                         {cell.piece.type === 'pawn' && '🔫'}
-                         {cell.piece.type === 'rook' && '💣'}
-                         {cell.piece.type === 'knight' && '🔪'}
-                         {cell.piece.type === 'bishop' && '🔭'}
+                       <div className="w-14 h-14 flex items-center justify-center">
+                         <img 
+                           src={CSGO_MAP[`${cell.piece.team}-${cell.piece.type}`]} 
+                           alt={`${cell.piece.team} ${cell.piece.type}`} 
+                           className="w-full h-full object-contain filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" 
+                         />
                        </div>
                        
                        {/* Healthbar */}
