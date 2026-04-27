@@ -72,7 +72,6 @@ export default function PlayBotPage() {
       const move = gameCopy.move({ from: sourceSquare, to: targetSquare, promotion: "q" });
       if (!move) return false;
 
-      // Optimistic update — snap piece immediately
       setFen(gameCopy.fen());
       gameRef.current = gameCopy;
       setStatus("Engine thinking...");
@@ -87,14 +86,8 @@ export default function PlayBotPage() {
   }, [depth]);
 
   function getMoveOptions(square: string) {
-    const moves = gameRef.current.moves({
-      square: square as any,
-      verbose: true,
-    });
-    if (moves.length === 0) {
-      setOptionSquares({});
-      return false;
-    }
+    const moves = gameRef.current.moves({ square: square as any, verbose: true });
+    if (moves.length === 0) { setOptionSquares({}); return false; }
 
     const newSquares: any = {};
     moves.map((move: any) => {
@@ -108,27 +101,21 @@ export default function PlayBotPage() {
       };
       return move;
     });
-    newSquares[square] = {
-      background: "rgba(255, 255, 0, 0.4)",
-    };
+    newSquares[square] = { background: "rgba(255, 255, 0, 0.4)" };
     setOptionSquares(newSquares);
     return true;
   }
 
   function onSquareClick(square: string) {
     const socket = wsRef.current;
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      return;
-    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
 
-    // reset options if click on empty square and nothing selected
     if (!moveFrom) {
       const hasMoveOptions = getMoveOptions(square);
       if (hasMoveOptions) setMoveFrom(square);
       return;
     }
 
-    // click on another piece to change selection
     const piece = gameRef.current.get(square as any);
     if (piece && piece.color === gameRef.current.turn()) {
       const hasMoveOptions = getMoveOptions(square);
@@ -137,22 +124,15 @@ export default function PlayBotPage() {
       return;
     }
 
-    // try to move
     const gameCopy = new Chess(gameRef.current.fen());
     try {
-      const move = gameCopy.move({
-        from: moveFrom,
-        to: square,
-        promotion: "q",
-      });
-
+      const move = gameCopy.move({ from: moveFrom, to: square, promotion: "q" });
       if (move) {
         setFen(gameCopy.fen());
         gameRef.current = gameCopy;
         setStatus("Engine thinking...");
         setMoveFrom(null);
         setOptionSquares({});
-
         socket.send(JSON.stringify({ move: move.lan, depth }));
       } else {
         setMoveFrom(null);
@@ -168,78 +148,102 @@ export default function PlayBotPage() {
   const whiteHeight = 50 + visualEval * 5;
 
   return (
-    <div className="h-full flex flex-col lg:flex-row gap-8">
-      {/* Left side: Board */}
-      <div className="flex-1 flex gap-4 lg:justify-end">
-        {/* Eval bar */}
-        <div className="w-8 h-[600px] bg-zinc-900 rounded-lg overflow-hidden flex flex-col relative border border-zinc-800">
-          <div className="w-full bg-zinc-800 transition-all duration-500" style={{ height: `${100 - whiteHeight}%` }} />
-          <div className="w-full bg-white transition-all duration-500" style={{ height: `${whiteHeight}%` }} />
-          <span className={`absolute w-full text-center text-xs font-bold top-1/2 -translate-y-1/2 z-10 mix-blend-difference ${evaluation > 0 ? "text-black" : "text-white"}`}>
-            {evaluation > 0 ? "+" : ""}{evaluation.toFixed(1)}
-          </span>
-        </div>
-
-        {/* Chessboard — rendered only on client */}
-        <div className="w-[600px] max-w-full">
-          {mounted ? (
-            <CustomChessboard
-              fen={fen}
-              onSquareClick={onSquareClick}
-              moveFrom={moveFrom}
-              optionSquares={optionSquares}
-            />
-          ) : (
-            <div className="w-[600px] h-[600px] bg-zinc-900 rounded-xl flex items-center justify-center border border-zinc-800">
-              <span className="text-zinc-500 font-mono">Loading board...</span>
-            </div>
-          )}
-        </div>
+    <div className="flex flex-col gap-4">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl lg:text-4xl font-black">Play vs Bot</h1>
+        <p className="text-zinc-400 text-sm mt-1">Challenge the Stockfish engine at any difficulty.</p>
       </div>
 
-      {/* Right side: Controls */}
-      <div className="lg:w-[350px] flex flex-col gap-6 lg:justify-start">
-        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-              <BrainCircuit className="w-6 h-6 text-black" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Chess Engine</h2>
-              <p className="text-zinc-400 text-sm">{winChance.toFixed(1)}% Win Chance</p>
-            </div>
+      {/* Main game layout — vertical on mobile, horizontal on desktop */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+
+        {/* Board + eval bar */}
+        <div className="flex gap-2 lg:gap-4 items-start justify-center flex-1">
+
+          {/* Vertical eval bar — desktop only */}
+          <div className="hidden lg:flex w-6 h-[560px] bg-zinc-900 rounded-lg overflow-hidden flex-col relative border border-zinc-800 shrink-0">
+            <div className="w-full bg-zinc-800 transition-all duration-500" style={{ height: `${100 - whiteHeight}%` }} />
+            <div className="w-full bg-white transition-all duration-500" style={{ height: `${whiteHeight}%` }} />
+            <span className={`absolute w-full text-center text-[10px] font-bold top-1/2 -translate-y-1/2 z-10 mix-blend-difference ${evaluation > 0 ? "text-black" : "text-white"}`}>
+              {evaluation > 0 ? "+" : ""}{evaluation.toFixed(1)}
+            </span>
           </div>
 
-          <div className="mb-6">
-            <label className="text-sm font-semibold text-zinc-300 block mb-2">Bot Difficulty (Depth: {depth})</label>
-            <input
-              type="range"
-              min="1"
-              max="18"
-              value={depth}
-              onChange={(e) => setDepth(parseInt(e.target.value))}
-              className="w-full accent-white"
-            />
-            <div className="flex justify-between text-xs text-zinc-500 mt-1">
-              <span>Novice</span>
-              <span>Grandmaster</span>
+          {/* Chessboard — fluid width */}
+          <div className="w-full max-w-[min(560px,calc(100vw-2rem))] lg:w-[560px]">
+            {mounted ? (
+              <CustomChessboard
+                fen={fen}
+                onSquareClick={onSquareClick}
+                moveFrom={moveFrom}
+                optionSquares={optionSquares}
+              />
+            ) : (
+              <div className="w-full aspect-square bg-zinc-900 rounded-xl flex items-center justify-center border border-zinc-800">
+                <span className="text-zinc-500 font-mono text-sm">Loading board...</span>
+              </div>
+            )}
+
+            {/* Horizontal eval bar — mobile only */}
+            <div className="lg:hidden mt-3 h-4 bg-zinc-900 rounded-full overflow-hidden flex relative border border-zinc-800">
+              <div className="h-full bg-zinc-700 transition-all duration-500" style={{ width: `${100 - whiteHeight}%` }} />
+              <div className="h-full bg-white transition-all duration-500" style={{ width: `${whiteHeight}%` }} />
+              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold mix-blend-difference text-white">
+                {evaluation > 0 ? "+" : ""}{evaluation.toFixed(1)}
+              </span>
+            </div>
+
+            {/* Status under board — mobile only */}
+            <div className="lg:hidden mt-3 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-center">
+              <span className="text-sm text-zinc-300 font-medium">{status}</span>
             </div>
           </div>
+        </div>
 
-          <div className="bg-black rounded-lg p-4 mb-6 border border-zinc-800 flex items-center justify-center text-center">
-            <span className="font-medium text-sm text-zinc-300">{status}</span>
-          </div>
+        {/* Controls panel */}
+        <div className="lg:w-[300px] flex flex-col gap-4 shrink-0">
+          <div className="bg-zinc-900 rounded-xl p-5 border border-zinc-800">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shrink-0">
+                <BrainCircuit className="w-5 h-5 text-black" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold">Chess Engine</h2>
+                <p className="text-zinc-400 text-xs">{winChance.toFixed(1)}% Win Chance</p>
+              </div>
+            </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => window.location.reload()}
-              className="flex-1 bg-white text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" /> Restart
-            </button>
-            <button className="flex-1 bg-red-500/10 text-red-500 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
-              <Flag className="w-4 h-4" /> Resign
-            </button>
+            <div className="mb-5">
+              <label className="text-sm font-semibold text-zinc-300 block mb-2">
+                Difficulty — Depth {depth}
+              </label>
+              <input
+                type="range" min="1" max="18" value={depth}
+                onChange={(e) => setDepth(parseInt(e.target.value))}
+                className="w-full accent-white"
+              />
+              <div className="flex justify-between text-xs text-zinc-500 mt-1">
+                <span>Novice</span><span>Grandmaster</span>
+              </div>
+            </div>
+
+            {/* Status — desktop only */}
+            <div className="hidden lg:flex bg-black rounded-lg px-4 py-3 mb-5 border border-zinc-800 items-center justify-center text-center">
+              <span className="font-medium text-sm text-zinc-300">{status}</span>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="flex-1 bg-white text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors text-sm"
+              >
+                <RotateCcw className="w-4 h-4" /> Restart
+              </button>
+              <button className="flex-1 bg-red-500/10 text-red-500 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors text-sm">
+                <Flag className="w-4 h-4" /> Resign
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -226,73 +226,88 @@ export default function OnlinePlayPage() {
   if (!mounted) return <div className="h-full flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="h-full flex flex-col lg:flex-row gap-8">
-      {/* Left side: Board */}
-      <div className="flex-1 flex gap-4 lg:justify-end">
-        {gameState === "idle" || gameState === "searching" ? (
-          <div className="w-[600px] aspect-square bg-zinc-900 border border-zinc-800 rounded-xl flex flex-col items-center justify-center">
-            <Users className="w-16 h-16 text-zinc-600 mb-6" />
-            <h2 className="text-2xl font-bold mb-2">Play against the world</h2>
-            <p className="text-zinc-500 mb-8 text-center max-w-sm">Match with opponents of similar skill level from across the globe.</p>
-            
-            <button 
-              onClick={findMatch}
-              disabled={gameState === "searching"}
-              className="bg-white text-black font-bold py-4 px-12 rounded-full flex items-center justify-center gap-3 hover:bg-gray-200 transition-transform active:scale-95 disabled:opacity-50"
-            >
-              {gameState === "searching" ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Searching...</>
-              ) : (
-                "Find Match"
-              )}
-            </button>
-            <p className="text-zinc-500 text-sm mt-6 font-mono">{status}</p>
-          </div>
-        ) : (
-          <div className="w-[600px] max-w-full">
-            <CustomChessboard 
-              fen={fen} 
-              onSquareClick={onSquareClick}
-              moveFrom={moveFrom}
-              optionSquares={optionSquares}
-              boardOrientation={playerColor === 'w' ? 'white' : 'black'}
-            />
+    <div className="flex flex-col gap-4">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl lg:text-4xl font-black">Play Online</h1>
+        <p className="text-zinc-400 text-sm mt-1">Match with opponents from across the globe.</p>
+      </div>
+
+      {/* Game area */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+
+        {/* Board area */}
+        <div className="flex-1 flex justify-center lg:justify-end">
+          {gameState === "idle" || gameState === "searching" ? (
+            <div className="w-full max-w-[min(560px,calc(100vw-2rem))] aspect-square bg-zinc-900 border border-zinc-800 rounded-xl flex flex-col items-center justify-center px-6">
+              <Users className="w-12 h-12 lg:w-16 lg:h-16 text-zinc-600 mb-4 lg:mb-6" />
+              <h2 className="text-xl lg:text-2xl font-bold mb-2 text-center">Play against the world</h2>
+              <p className="text-zinc-500 mb-6 lg:mb-8 text-center text-sm max-w-xs">Match with opponents of similar skill level from across the globe.</p>
+
+              <button
+                onClick={findMatch}
+                disabled={gameState === "searching"}
+                className="bg-white text-black font-bold py-3.5 px-10 rounded-full flex items-center justify-center gap-3 hover:bg-gray-200 transition-transform active:scale-95 disabled:opacity-50 text-sm"
+              >
+                {gameState === "searching" ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Searching...</>
+                ) : (
+                  "Find Match"
+                )}
+              </button>
+              <p className="text-zinc-500 text-xs mt-5 font-mono text-center">{status}</p>
+            </div>
+          ) : (
+            <div className="w-full max-w-[min(560px,calc(100vw-2rem))] lg:w-[560px]">
+              <CustomChessboard
+                fen={fen}
+                onSquareClick={onSquareClick}
+                moveFrom={moveFrom}
+                optionSquares={optionSquares}
+                boardOrientation={playerColor === 'w' ? 'white' : 'black'}
+              />
+              {/* Status under board — mobile only */}
+              <div className="lg:hidden mt-3 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-center">
+                <span className="text-sm text-zinc-300 font-medium">{status}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Controls panel — only when playing */}
+        {(gameState === "playing" || gameState === "game_over") && (
+          <div className="lg:w-[300px] flex flex-col gap-4 shrink-0">
+            <div className="bg-zinc-900 rounded-xl p-5 border border-zinc-800">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center shrink-0">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold">Online Opponent</h2>
+                  <p className="text-zinc-400 text-xs">ELO ~1200</p>
+                </div>
+              </div>
+
+              {/* Status — desktop only */}
+              <div className="hidden lg:flex bg-black rounded-lg px-4 py-3 mb-5 border border-zinc-800 items-center justify-center text-center">
+                <span className="font-medium text-sm text-zinc-300">{status}</span>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setGameState("idle")}
+                  className="flex-1 bg-white text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors text-sm"
+                >
+                  New Game
+                </button>
+                <button className="flex-1 bg-red-500/10 text-red-500 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors text-sm">
+                  <Flag className="w-4 h-4" /> Resign
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Right side: Controls */}
-      {gameState === "playing" || gameState === "game_over" ? (
-        <div className="lg:w-[350px] flex flex-col gap-6 lg:justify-start">
-          <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-zinc-800 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">Online Opponent</h2>
-                <p className="text-zinc-400 text-sm">ELO ~1200</p>
-              </div>
-            </div>
-            
-            <div className="bg-black rounded-lg p-4 mb-6 border border-zinc-800 flex items-center justify-center text-center">
-              <span className="font-medium text-sm text-zinc-300">{status}</span>
-            </div>
-
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setGameState("idle")}
-                className="flex-1 bg-white text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
-              >
-                New Game
-              </button>
-              <button className="flex-1 bg-red-500/10 text-red-500 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
-                <Flag className="w-4 h-4" /> Resign
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

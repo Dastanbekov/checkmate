@@ -87,8 +87,8 @@ export default function CommunityPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-black">Community Clubs</h1>
-          <p className="text-zinc-400 mt-2">Join clubs, meet players, and participate in tournaments.</p>
+          <h1 className="text-2xl lg:text-4xl font-black">Community Clubs</h1>
+          <p className="text-zinc-400 mt-1 text-sm">Join clubs, meet players, and participate in tournaments.</p>
         </div>
         <button 
           onClick={() => setShowCreate(!showCreate)}
@@ -132,7 +132,7 @@ export default function CommunityPage() {
       {loading ? (
         <div className="text-zinc-500">Loading clubs...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
           {clubs.map(club => (
             <div key={club.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col">
               <div className="flex items-center gap-3 mb-4">

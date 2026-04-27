@@ -155,4 +155,19 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-zinc-500;
   }
+
+  /* Safe area for mobile bottom nav (notched iPhones) */
+  .safe-area-bottom {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  /* Prevent text from being too large on mobile */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Smooth scrolling on iOS */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
