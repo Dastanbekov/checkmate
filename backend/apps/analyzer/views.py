@@ -7,9 +7,7 @@ import io
 import httpx
 from groq import Groq
 
-# We will initialize Groq Client here
 # Make sure GROQ_API_KEY is in environment variables or .env
-client = Groq(api_key=os.environ.get("GROQ_API_KEY", "gsk_dummy_key_if_missing"))
 
 class AnalyzeGameView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -52,6 +50,13 @@ Please structure your response in Markdown with clear headings. Keep it concise 
 """
         
         try:
+            # Instantiate client here to ensure env vars are loaded
+            api_key = os.environ.get("GROQ_API_KEY")
+            if not api_key or api_key == "gsk_dummy_key_if_missing":
+                raise ValueError("GROQ_API_KEY is missing from environment. Please add it to your .env file.")
+                
+            client = Groq(api_key=api_key)
+            
             # Call Groq API
             chat_completion = client.chat.completions.create(
                 messages=[
@@ -60,7 +65,7 @@ Please structure your response in Markdown with clear headings. Keep it concise 
                         "content": prompt,
                     }
                 ],
-                model="llama3-70b-8192",
+                model="llama-3.3-70b-versatile",
                 temperature=0.7,
                 max_tokens=1024,
             )
