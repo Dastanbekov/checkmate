@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Activity, Play, Users, LogOut, User as UserIcon } from "lucide-react";
+import { Activity, Play, Users, LogOut, User as UserIcon, BookOpen } from "lucide-react";
 
 export function Sidebar() {
   const { user, logout } = useAuth();
@@ -12,8 +12,9 @@ export function Sidebar() {
   const links = [
     { name: "Play vs Bot", href: "/play/bot", icon: Play },
     { name: "Play Online", href: "/play/online", icon: Users },
+    { name: "CS:GO Mode", href: "/play/csgo", icon: Activity },
     { name: "Analyzer", href: "/analyzer", icon: Activity },
-    { name: "Games", href: "/games", icon: Play },
+    { name: "Lessons", href: "/lessons", icon: BookOpen },
     { name: "Communities", href: "/community", icon: Users },
   ];
 

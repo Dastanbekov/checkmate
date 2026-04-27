@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Chess } from "chess.js";
-import { Chessboard } from "react-chessboard";
+import { CustomChessboard } from "@/components/ui/custom-chessboard";
 import { Flag, Loader2, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -11,12 +11,15 @@ export default function OnlinePlayPage() {
   const [mounted, setMounted] = useState(false);
   const [status, setStatus] = useState("Idle");
   const [gameState, setGameState] = useState<"idle" | "searching" | "playing" | "game_over">("idle");
-  const [game, setGame] = useState(new Chess());
+  const [fen, setFen] = useState("start");
   const gameRef = useRef(new Chess());
   const matchWsRef = useRef<WebSocket | null>(null);
   const gameWsRef = useRef<WebSocket | null>(null);
   const [playerColor, setPlayerColor] = useState<"w" | "b">("w");
   const [roomId, setRoomId] = useState<string | null>(null);
+  
+  const [moveFrom, setMoveFrom] = useState<string | null>(null);
+  const [optionSquares, setOptionSquares] = useState<any>({});
 
   useEffect(() => {
     setMounted(true);
@@ -73,7 +76,7 @@ export default function OnlinePlayPage() {
       if (data.type === "game_state" || data.type === "move") {
         const newGame = new Chess();
         newGame.load(data.fen);
-        setGame(newGame);
+        setFen(data.fen);
         gameRef.current = newGame;
         
         if (data.type === "move") {
@@ -90,7 +93,7 @@ export default function OnlinePlayPage() {
     };
   };
 
-  function onDrop(sourceSquare: string, targetSquare: string) {
+  const onDrop = useCallback((sourceSquare: string, targetSquare: string): boolean => {
     if (gameState !== "playing") return false;
     
     const socket = gameWsRef.current;
@@ -110,12 +113,14 @@ export default function OnlinePlayPage() {
         promotion: "q", 
       });
 
-      if (move === null) return false;
+      if (!move) return false;
 
       // Update local state immediately for snappy UI
-      setGame(gameCopy);
+      setFen(gameCopy.fen());
       gameRef.current = gameCopy;
       setStatus("Sending move...");
+      setMoveFrom(null);
+      setOptionSquares({});
 
       // Send to backend
       socket.send(JSON.stringify({ 
@@ -123,8 +128,88 @@ export default function OnlinePlayPage() {
       }));
       
       return true;
-    } catch (e) {
+    } catch {
       return false;
+    }
+  }, [gameState, playerColor]);
+
+  function getMoveOptions(square: string) {
+    const moves = gameRef.current.moves({
+      square: square as any,
+      verbose: true,
+    });
+    if (moves.length === 0) {
+      setOptionSquares({});
+      return false;
+    }
+
+    const newSquares: any = {};
+    moves.map((move: any) => {
+      newSquares[move.to] = {
+        background:
+          gameRef.current.get(move.to as any) &&
+          gameRef.current.get(move.to as any).color !== gameRef.current.get(square as any).color
+            ? "radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)"
+            : "radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)",
+        borderRadius: "50%",
+      };
+      return move;
+    });
+    newSquares[square] = {
+      background: "rgba(255, 255, 0, 0.4)",
+    };
+    setOptionSquares(newSquares);
+    return true;
+  }
+
+  function onSquareClick(square: string) {
+    if (gameState !== "playing") return;
+    
+    const socket = gameWsRef.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    
+    // reset options if click on empty square and nothing selected
+    if (!moveFrom) {
+      const hasMoveOptions = getMoveOptions(square);
+      if (hasMoveOptions) setMoveFrom(square);
+      return;
+    }
+
+    // click on another piece to change selection
+    const piece = gameRef.current.get(square as any);
+    if (piece && piece.color === gameRef.current.turn()) {
+      const hasMoveOptions = getMoveOptions(square);
+      if (hasMoveOptions) setMoveFrom(square);
+      else setMoveFrom(null);
+      return;
+    }
+
+    // try to move
+    const gameCopy = new Chess(gameRef.current.fen());
+    if (gameCopy.turn() !== playerColor) return;
+
+    try {
+      const move = gameCopy.move({
+        from: moveFrom,
+        to: square,
+        promotion: "q",
+      });
+
+      if (move) {
+        setFen(gameCopy.fen());
+        gameRef.current = gameCopy;
+        setStatus("Sending move...");
+        setMoveFrom(null);
+        setOptionSquares({});
+
+        socket.send(JSON.stringify({ move: move.lan }));
+      } else {
+        setMoveFrom(null);
+        setOptionSquares({});
+      }
+    } catch {
+      setMoveFrom(null);
+      setOptionSquares({});
     }
   }
 
@@ -155,14 +240,12 @@ export default function OnlinePlayPage() {
           </div>
         ) : (
           <div className="w-[600px] max-w-full">
-            <Chessboard 
-              position={game.fen()} 
-              onPieceDrop={onDrop}
+            <CustomChessboard 
+              fen={fen} 
+              onSquareClick={onSquareClick}
+              moveFrom={moveFrom}
+              optionSquares={optionSquares}
               boardOrientation={playerColor === 'w' ? 'white' : 'black'}
-              boardWidth={600}
-              customDarkSquareStyle={{ backgroundColor: "#3f3f46" }}
-              customLightSquareStyle={{ backgroundColor: "#d4d4d8" }}
-              animationDuration={200}
             />
           </div>
         )}

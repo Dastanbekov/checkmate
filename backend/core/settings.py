@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.analyzer',
     'apps.users',
     'apps.community',
+    'apps.lessons',
 ]
 
 MIDDLEWARE = [

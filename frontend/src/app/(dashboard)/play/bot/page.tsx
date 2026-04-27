@@ -1,45 +1,46 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Chess } from "chess.js";
-import { Chessboard } from "react-chessboard";
+import { CustomChessboard } from "@/components/ui/custom-chessboard";
 import { BrainCircuit, Flag, RotateCcw } from "lucide-react";
 
 export default function PlayBotPage() {
-  const [mounted, setMounted] = useState(false);
-  const [game, setGame] = useState(new Chess());
+  const [fen, setFen] = useState("start");
   const gameRef = useRef(new Chess());
   const wsRef = useRef<WebSocket | null>(null);
   const [status, setStatus] = useState("Connecting to server...");
   const [depth, setDepth] = useState(10);
-  const [evaluation, setEvaluation] = useState<number>(0); 
+  const [evaluation, setEvaluation] = useState<number>(0);
   const [winChance, setWinChance] = useState<number>(50);
+  const [mounted, setMounted] = useState(false);
+  const [moveFrom, setMoveFrom] = useState<string | null>(null);
+  const [optionSquares, setOptionSquares] = useState<any>({});
 
   useEffect(() => {
     setMounted(true);
     const socket = new WebSocket("ws://127.0.0.1:8000/ws/play/bot/");
     wsRef.current = socket;
-    
+
     socket.onopen = () => {
-      setStatus("Connected. Your turn!");
+      setStatus("Connected. Your turn (White)!");
     };
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      
+
       if (data.type === "game_state" || data.type === "move") {
         const newGame = new Chess();
         newGame.load(data.fen);
-        setGame(newGame);
+        setFen(data.fen);
         gameRef.current = newGame;
-        
+
         if (data.eval !== undefined) {
-           setEvaluation(data.eval);
-           setWinChance(data.winChance);
+          setEvaluation(data.eval);
+          setWinChance(data.winChance ?? 50);
         }
-        
-        if (data.type === "move" && data.turn === 'w') {
-           setStatus("Your turn!");
+        if (data.type === "move" && data.turn === "w") {
+          setStatus("Your turn!");
         }
       } else if (data.type === "info") {
         setStatus(data.message);
@@ -50,97 +51,148 @@ export default function PlayBotPage() {
       }
     };
 
+    socket.onerror = () => setStatus("Connection error. Is the backend running?");
+
     return () => {
       socket.close();
     };
   }, []);
 
-  function onDrop(sourceSquare: string, targetSquare: string) {
-    console.log("onDrop triggered:", sourceSquare, "->", targetSquare);
-    
+  const onDrop = useCallback((sourceSquare: string, targetSquare: string): boolean => {
     const socket = wsRef.current;
-    if (!socket) {
-      console.error("WebSocket is null");
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      setStatus("Not connected to server!");
       return false;
     }
-    
-    console.log("WebSocket readyState:", socket.readyState, " (OPEN = 1)");
-    
-    if (socket.readyState !== WebSocket.OPEN) {
-      console.error("WebSocket not ready. It is in state:", socket.readyState);
-      return false;
-    }
-    
+
     const gameCopy = new Chess(gameRef.current.fen());
-    console.log("Current FEN:", gameCopy.fen());
-    
+
+    try {
+      const move = gameCopy.move({ from: sourceSquare, to: targetSquare, promotion: "q" });
+      if (!move) return false;
+
+      // Optimistic update — snap piece immediately
+      setFen(gameCopy.fen());
+      gameRef.current = gameCopy;
+      setStatus("Engine thinking...");
+      setMoveFrom(null);
+      setOptionSquares({});
+
+      socket.send(JSON.stringify({ move: move.lan, depth }));
+      return true;
+    } catch {
+      return false;
+    }
+  }, [depth]);
+
+  function getMoveOptions(square: string) {
+    const moves = gameRef.current.moves({
+      square: square as any,
+      verbose: true,
+    });
+    if (moves.length === 0) {
+      setOptionSquares({});
+      return false;
+    }
+
+    const newSquares: any = {};
+    moves.map((move: any) => {
+      newSquares[move.to] = {
+        background:
+          gameRef.current.get(move.to as any) &&
+          gameRef.current.get(move.to as any).color !== gameRef.current.get(square as any).color
+            ? "radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)"
+            : "radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)",
+        borderRadius: "50%",
+      };
+      return move;
+    });
+    newSquares[square] = {
+      background: "rgba(255, 255, 0, 0.4)",
+    };
+    setOptionSquares(newSquares);
+    return true;
+  }
+
+  function onSquareClick(square: string) {
+    const socket = wsRef.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    // reset options if click on empty square and nothing selected
+    if (!moveFrom) {
+      const hasMoveOptions = getMoveOptions(square);
+      if (hasMoveOptions) setMoveFrom(square);
+      return;
+    }
+
+    // click on another piece to change selection
+    const piece = gameRef.current.get(square as any);
+    if (piece && piece.color === gameRef.current.turn()) {
+      const hasMoveOptions = getMoveOptions(square);
+      if (hasMoveOptions) setMoveFrom(square);
+      else setMoveFrom(null);
+      return;
+    }
+
+    // try to move
+    const gameCopy = new Chess(gameRef.current.fen());
     try {
       const move = gameCopy.move({
-        from: sourceSquare,
-        to: targetSquare,
-        promotion: "q", 
+        from: moveFrom,
+        to: square,
+        promotion: "q",
       });
 
-      console.log("Move validation result:", move);
+      if (move) {
+        setFen(gameCopy.fen());
+        gameRef.current = gameCopy;
+        setStatus("Engine thinking...");
+        setMoveFrom(null);
+        setOptionSquares({});
 
-      if (move === null) {
-         console.warn("Invalid move according to chess.js");
-         return false;
+        socket.send(JSON.stringify({ move: move.lan, depth }));
+      } else {
+        setMoveFrom(null);
+        setOptionSquares({});
       }
-
-      // Update local state immediately
-      setGame(gameCopy);
-      gameRef.current = gameCopy;
-      setStatus("Sending move...");
-
-      const movePayload = { 
-        move: move.lan, 
-        depth: depth
-      };
-      console.log("Sending payload:", movePayload);
-      
-      // Send to backend
-      socket.send(JSON.stringify(movePayload));
-      
-      return true;
-    } catch (e) {
-      console.error("Exception during move:", e);
-      return false;
+    } catch {
+      setMoveFrom(null);
+      setOptionSquares({});
     }
   }
 
   const visualEval = Math.max(-10, Math.min(10, evaluation));
-  const whiteHeight = 50 + (visualEval * 5);
-
-  if (!mounted) {
-     return <div className="h-full flex items-center justify-center">Loading board...</div>;
-  }
+  const whiteHeight = 50 + visualEval * 5;
 
   return (
     <div className="h-full flex flex-col lg:flex-row gap-8">
-      
       {/* Left side: Board */}
       <div className="flex-1 flex gap-4 lg:justify-end">
         {/* Eval bar */}
         <div className="w-8 h-[600px] bg-zinc-900 rounded-lg overflow-hidden flex flex-col relative border border-zinc-800">
-           <div className="w-full bg-zinc-800 transition-all duration-500" style={{ height: `${100 - whiteHeight}%` }} />
-           <div className="w-full bg-white transition-all duration-500" style={{ height: `${whiteHeight}%` }} />
-           
-           <span className={`absolute w-full text-center text-xs font-bold top-1/2 -translate-y-1/2 ${evaluation > 0 ? 'text-black' : 'text-white'} z-10 mix-blend-difference`}>
-             {evaluation > 0 ? '+' : ''}{evaluation.toFixed(1)}
-           </span>
+          <div className="w-full bg-zinc-800 transition-all duration-500" style={{ height: `${100 - whiteHeight}%` }} />
+          <div className="w-full bg-white transition-all duration-500" style={{ height: `${whiteHeight}%` }} />
+          <span className={`absolute w-full text-center text-xs font-bold top-1/2 -translate-y-1/2 z-10 mix-blend-difference ${evaluation > 0 ? "text-black" : "text-white"}`}>
+            {evaluation > 0 ? "+" : ""}{evaluation.toFixed(1)}
+          </span>
         </div>
-        
-        {/* Chessboard */}
+
+        {/* Chessboard — rendered only on client */}
         <div className="w-[600px] max-w-full">
-           <Chessboard 
-              position={game.fen()} 
-              onPieceDrop={onDrop}
-              boardWidth={600}
-              customDarkSquareStyle={{ backgroundColor: "#3f3f46" }}
-              customLightSquareStyle={{ backgroundColor: "#d4d4d8" }}
-              animationDuration={200}
-           />
+          {mounted ? (
+            <CustomChessboard
+              fen={fen}
+              onSquareClick={onSquareClick}
+              moveFrom={moveFrom}
+              optionSquares={optionSquares}
+            />
+          ) : (
+            <div className="w-[600px] h-[600px] bg-zinc-900 rounded-xl flex items-center justify-center border border-zinc-800">
+              <span className="text-zinc-500 font-mono">Loading board...</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -152,18 +204,18 @@ export default function PlayBotPage() {
               <BrainCircuit className="w-6 h-6 text-black" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">Stockfish 16.1</h2>
+              <h2 className="text-xl font-bold">Chess Engine</h2>
               <p className="text-zinc-400 text-sm">{winChance.toFixed(1)}% Win Chance</p>
             </div>
           </div>
-          
+
           <div className="mb-6">
             <label className="text-sm font-semibold text-zinc-300 block mb-2">Bot Difficulty (Depth: {depth})</label>
-            <input 
-              type="range" 
-              min="1" 
-              max="18" 
-              value={depth} 
+            <input
+              type="range"
+              min="1"
+              max="18"
+              value={depth}
               onChange={(e) => setDepth(parseInt(e.target.value))}
               className="w-full accent-white"
             />
@@ -178,16 +230,18 @@ export default function PlayBotPage() {
           </div>
 
           <div className="flex gap-3">
-             <button onClick={() => window.location.reload()} className="flex-1 bg-white text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors">
-               <RotateCcw className="w-4 h-4" /> Restart
-             </button>
-             <button className="flex-1 bg-red-500/10 text-red-500 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
-               <Flag className="w-4 h-4" /> Resign
-             </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex-1 bg-white text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" /> Restart
+            </button>
+            <button className="flex-1 bg-red-500/10 text-red-500 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
+              <Flag className="w-4 h-4" /> Resign
+            </button>
           </div>
         </div>
       </div>
-
     </div>
   );
 }
