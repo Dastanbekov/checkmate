@@ -6,6 +6,7 @@ import { Chess } from "chess.js";
 import { CustomChessboard } from "@/components/ui/custom-chessboard";
 import { Flag, Loader2, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useChessSound } from "@/hooks/useChessSound";
 
 export default function OnlinePlayPage() {
   const { user } = useAuth();
@@ -21,6 +22,7 @@ export default function OnlinePlayPage() {
   
   const [moveFrom, setMoveFrom] = useState<string | null>(null);
   const [optionSquares, setOptionSquares] = useState<any>({});
+  const { playMove, playCapture } = useChessSound();
 
   useEffect(() => {
     setMounted(true);
@@ -84,13 +86,21 @@ export default function OnlinePlayPage() {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "game_state" || data.type === "move") {
+        const oldPieceCount = gameRef.current.board().flat().filter((p) => p !== null).length;
+        
         const newGame = new Chess();
         newGame.load(data.fen);
         setFen(data.fen);
         gameRef.current = newGame;
         
+        const newPieceCount = newGame.board().flat().filter((p) => p !== null).length;
+
         if (data.type === "move") {
            setStatus(data.turn === color ? "Your turn!" : "Opponent's turn");
+           if (data.turn === color) {
+             if (newPieceCount < oldPieceCount) playCapture();
+             else playMove();
+           }
         }
       } else if (data.type === "info") {
         setStatus(data.message);
@@ -124,6 +134,9 @@ export default function OnlinePlayPage() {
       });
 
       if (!move) return false;
+
+      if (move.captured) playCapture();
+      else playMove();
 
       // Update local state immediately for snappy UI
       setFen(gameCopy.fen());
@@ -206,6 +219,9 @@ export default function OnlinePlayPage() {
       });
 
       if (move) {
+        if (move.captured) playCapture();
+        else playMove();
+
         setFen(gameCopy.fen());
         gameRef.current = gameCopy;
         setStatus("Sending move...");

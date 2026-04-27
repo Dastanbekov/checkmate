@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Chess } from "chess.js";
 import { CustomChessboard } from "@/components/ui/custom-chessboard";
 import { BrainCircuit, Flag, RotateCcw } from "lucide-react";
+import { useChessSound } from "@/hooks/useChessSound";
 
 export default function PlayBotPage() {
   const [fen, setFen] = useState("start");
@@ -17,6 +18,7 @@ export default function PlayBotPage() {
   const [mounted, setMounted] = useState(false);
   const [moveFrom, setMoveFrom] = useState<string | null>(null);
   const [optionSquares, setOptionSquares] = useState<any>({});
+  const { playMove, playCapture } = useChessSound();
 
   useEffect(() => {
     setMounted(true);
@@ -31,17 +33,28 @@ export default function PlayBotPage() {
       const data = JSON.parse(event.data);
 
       if (data.type === "game_state" || data.type === "move") {
+        const oldPieceCount = gameRef.current.board().flat().filter((p) => p !== null).length;
+        
         const newGame = new Chess();
         newGame.load(data.fen);
         setFen(data.fen);
         gameRef.current = newGame;
 
+        const newPieceCount = newGame.board().flat().filter((p) => p !== null).length;
+
+        // If turn was just completed by the bot (so it's our turn now), play sound
+        if (data.type === "move" && data.turn === "w") {
+          setStatus("Your turn!");
+          if (newPieceCount < oldPieceCount) {
+            playCapture();
+          } else {
+            playMove();
+          }
+        }
+
         if (data.eval !== undefined) {
           setEvaluation(data.eval);
           setWinChance(data.winChance ?? 50);
-        }
-        if (data.type === "move" && data.turn === "w") {
-          setStatus("Your turn!");
         }
       } else if (data.type === "info") {
         setStatus(data.message);
@@ -71,6 +84,9 @@ export default function PlayBotPage() {
     try {
       const move = gameCopy.move({ from: sourceSquare, to: targetSquare, promotion: "q" });
       if (!move) return false;
+
+      if (move.captured) playCapture();
+      else playMove();
 
       setFen(gameCopy.fen());
       gameRef.current = gameCopy;
@@ -128,6 +144,9 @@ export default function PlayBotPage() {
     try {
       const move = gameCopy.move({ from: moveFrom, to: square, promotion: "q" });
       if (move) {
+        if (move.captured) playCapture();
+        else playMove();
+
         setFen(gameCopy.fen());
         gameRef.current = gameCopy;
         setStatus("Engine thinking...");
