@@ -93,6 +93,16 @@ ASGI_APPLICATION = 'core.asgi.application'
 
 CORS_ALLOW_ALL_ORIGINS = True # Change to specific hosts in production
 
+# CSRF settings for production
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",
+    "https://*.railway.app",
+]
+
+# If you have a custom domain, add it here too
+if os.getenv('PRODUCTION_URL'):
+    CSRF_TRUSTED_ORIGINS.append(os.getenv('PRODUCTION_URL'))
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
