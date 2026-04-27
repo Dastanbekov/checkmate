@@ -1,4 +1,5 @@
 "use client";
+import { WS_URL } from '@/lib/api';
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Chess } from "chess.js";
@@ -19,7 +20,7 @@ export default function PlayBotPage() {
 
   useEffect(() => {
     setMounted(true);
-    const socket = new WebSocket(`${(process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8000")}/ws/play/bot/`);
+    const socket = new WebSocket(`${WS_URL}/ws/play/bot/`);
     wsRef.current = socket;
 
     socket.onopen = () => {

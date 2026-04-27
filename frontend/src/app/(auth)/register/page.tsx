@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from '@/lib/api';
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -38,7 +39,7 @@ export default function RegisterPage() {
     setApiError("");
     try {
       // 1. Register User
-      const registerRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/users/register/`, {
+      const registerRes = await fetch(`${API_URL}/api/users/register/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,7 +55,7 @@ export default function RegisterPage() {
       }
 
       // 2. Auto-login after registration
-      const loginRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/users/login/`, {
+      const loginRes = await fetch(`${API_URL}/api/users/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: data.name, password: data.password }),
@@ -64,7 +65,7 @@ export default function RegisterPage() {
       const tokenData = await loginRes.json();
 
       // 3. Get Profile
-      const profileRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/users/profile/`, {
+      const profileRes = await fetch(`${API_URL}/api/users/profile/`, {
         headers: { Authorization: `Bearer ${tokenData.access}` },
       });
 

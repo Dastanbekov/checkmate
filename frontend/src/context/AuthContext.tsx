@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from '@/lib/api';
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
@@ -25,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/users/profile/`, {
+      fetch(`${API_URL}/api/users/profile/`, {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then(res => {

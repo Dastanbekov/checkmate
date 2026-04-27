@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from '@/lib/api';
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { CustomChessboard } from "@/components/ui/custom-chessboard";
@@ -36,7 +37,7 @@ export default function LessonsPage() {
 
   useEffect(() => {
     setMounted(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/lessons/`)
+    fetch(`${API_URL}/api/lessons/`)
       .then((r) => r.json())
       .then(setLessons);
   }, []);

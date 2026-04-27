@@ -1,4 +1,5 @@
 "use client";
+import { WS_URL } from '@/lib/api';
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Chess } from "chess.js";
@@ -36,7 +37,7 @@ export default function OnlinePlayPage() {
     setStatus("Connecting to matchmaking...");
     
     const token = localStorage.getItem("token") || "";
-    const ws = new WebSocket(`${(process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8000")}/ws/play/matchmaking/?token=${token}`);
+    const ws = new WebSocket(`${WS_URL}/ws/play/matchmaking/?token=${token}`);
     matchWsRef.current = ws;
 
     ws.onopen = () => {
@@ -63,7 +64,7 @@ export default function OnlinePlayPage() {
   };
 
   const connectToGame = (room: string, color: string) => {
-    const ws = new WebSocket(`${(process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8000")}/ws/play/online/${room}/`);
+    const ws = new WebSocket(`${WS_URL}/ws/play/online/${room}/`);
     gameWsRef.current = ws;
 
     ws.onopen = () => {

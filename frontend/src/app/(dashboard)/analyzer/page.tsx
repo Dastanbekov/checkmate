@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from '@/lib/api';
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -25,7 +26,7 @@ export default function AnalyzerPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/analyzer/analyze/`, {
+      const res = await fetch(`${API_URL}/api/analyzer/analyze/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

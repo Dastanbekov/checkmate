@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from '@/lib/api';
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -27,7 +28,7 @@ export default function CommunityPage() {
   const fetchClubs = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/community/clubs/`, {
+      const res = await fetch(`${API_URL}/api/community/clubs/`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.ok) {
@@ -48,7 +49,7 @@ export default function CommunityPage() {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/community/clubs/`, {
+      const res = await fetch(`${API_URL}/api/community/clubs/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +71,7 @@ export default function CommunityPage() {
   const handleJoinLeave = async (clubId: number) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/community/clubs/${clubId}/join/`, {
+      const res = await fetch(`${API_URL}/api/community/clubs/${clubId}/join/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
