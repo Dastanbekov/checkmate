@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import ReactMarkdown from "react-markdown";
-import dynamic from "next/dynamic";
-import { BrainCircuit, Loader2 } from "lucide-react";
-
-const Chessboard = dynamic(() => import("react-chessboard").then((mod) => mod.Chessboard), { ssr: false });
+import { Chess } from "chess.js";
+import { CustomChessboard } from "@/components/ui/custom-chessboard";
+import { BrainCircuit, Loader2, ChevronLeft, ChevronRight, SkipBack, SkipForward } from "lucide-react";
 
 export default function AnalyzerPage() {
   const { user } = useAuth();
@@ -14,6 +13,8 @@ export default function AnalyzerPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState("");
+  const [fenHistory, setFenHistory] = useState<string[]>([]);
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
 
   const handleAnalyze = async () => {
     if (!pgn.trim()) return;
@@ -39,6 +40,23 @@ export default function AnalyzerPage() {
 
       const data = await res.json();
       setResult(data);
+
+      try {
+        const game = new Chess();
+        game.loadPgn(pgn);
+        const history = game.history();
+        const tempGame = new Chess();
+        const fens = [tempGame.fen()];
+        for (const move of history) {
+          tempGame.move(move);
+          fens.push(tempGame.fen());
+        }
+        setFenHistory(fens);
+        setCurrentMoveIndex(fens.length - 1);
+      } catch (e) {
+        setFenHistory([data.final_fen]);
+        setCurrentMoveIndex(0);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -76,11 +94,11 @@ export default function AnalyzerPage() {
            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col items-center justify-center min-h-[400px]">
              {result ? (
                <div className="w-full max-w-[400px]">
-                 <Chessboard 
-                   position={result.final_fen} 
-                   boardWidth={400}
-                   customDarkSquareStyle={{ backgroundColor: "#3f3f46" }}
-                   customLightSquareStyle={{ backgroundColor: "#d4d4d8" }}
+                 <CustomChessboard 
+                   fen={result.final_fen} 
+                   onSquareClick={() => {}}
+                   moveFrom={null}
+                   optionSquares={{}}
                  />
                  <p className="text-center text-zinc-500 mt-4 text-sm font-mono truncate">{result.final_fen}</p>
                </div>

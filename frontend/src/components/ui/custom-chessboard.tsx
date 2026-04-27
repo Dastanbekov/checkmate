@@ -22,8 +22,29 @@ export function CustomChessboard({
   optionSquares,
   boardOrientation = "white",
 }: CustomChessboardProps) {
-  const game = new Chess(fen);
-  const board = game.board();
+  // Manual FEN parser to avoid chess.js strict validation crashes on puzzle FENs
+  const parseFen = (fenString: string) => {
+    const board: ({ type: string; color: "w" | "b" } | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+    const layout = fenString === "start" ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR" : fenString.split(" ")[0];
+    const fenRows = layout.split("/");
+    
+    for (let r = 0; r < Math.min(8, fenRows.length); r++) {
+      let c = 0;
+      for (const char of fenRows[r]) {
+        if (/[1-8]/.test(char)) {
+          c += parseInt(char, 10);
+        } else {
+          if (c < 8) {
+            board[r][c] = { type: char.toLowerCase(), color: char === char.toLowerCase() ? "b" : "w" };
+          }
+          c++;
+        }
+      }
+    }
+    return board;
+  };
+
+  const board = parseFen(fen);
 
   // Create grid based on orientation
   const rows = boardOrientation === "white" ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
