@@ -1,6 +1,6 @@
 # ♟️ ChessMastery — Ultimate AI-Powered Chess Platform
 
-[![Project Video Demo](https://img.shields.io/badge/🎥-Video_Overview-red?style=for-the-badge)](https://link-to-your-video.com) 
+[![Project Video Demo](https://drive.google.com/u/0/drive-viewer/AKGpihbMtn48x_YJphJ9R9Lwn26f7B5ZoQmY8rWj4YEIMRsvKc5PmKbEJj3V5kvqEUcmnCImWlQwnK_6oxWVTltX2TpQw2oqIMAB9jM=s1600-rw-v1?auditContext=forDisplay)](https://youtu.be/Wp6u0E32ilc) 
 *(Click the badge above to watch the platform in action)*
 
 ChessMastery is a state-of-the-art chess ecosystem designed for players of all levels. It combines traditional chess mechanics with cutting-edge AI analysis, real-time multiplayer, and community features.
